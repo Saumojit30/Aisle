@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+ecvenv/
+venv/
+*.log
+*.err
+.env
+node_modules/
+.next/
