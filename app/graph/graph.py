@@ -23,8 +23,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 def guardrail_node(state: AgentState) -> Dict[str, Any]:
-    """Pre-flight: check budget and redact PII.  If budget fails the graph
-    short-circuits and the denial message is added to `messages`."""
+    """Pre-flight: check budget and redact PII. If budget fails, escalate to human handoff."""
     budget = get_budget_controller()
     session_id = state["session_id"]
     customer_id = state.get("customer_id")
@@ -35,10 +34,11 @@ def guardrail_node(state: AgentState) -> Dict[str, Any]:
             "budget_ok": False,
             "budget_message": msg,
             "guardrail_fail": True,
-            "guardrail_message": msg,
+            "routing_decision": "human_handoff",
+            "escalation_reason": "budget_exhausted",
             "messages": [AIMessage(content=(
-                "I'm sorry, but I can't process this request right now. "
-                f"{msg} Please contact support if you think this is an error."
+                "You've reached the automated message limit for this session. "
+                "I am transferring your conversation to a live customer service representative..."
             ))],
         }
 
@@ -51,15 +51,12 @@ def guardrail_node(state: AgentState) -> Dict[str, Any]:
                 "budget_ok": True,
                 "guardrail_fail": True,
                 "guardrail_message": safemsg,
-                "messages": [AIMessage(content="I can't process that request. Please rephrase.")],
+                "messages": [AIMessage(content="I can't process that request due to security policies. Please rephrase.")],
             }
         if findings:
             logger.info("PII redacted in session %s", session_id)
-            # Update the message content in place – the reducer keeps the original
-            # reference so we modify the message object directly.
             msgs[-1].content = redacted
 
-    # Link anonymous sessions to a customer ID for profiling
     if customer_id:
         get_customer_memory().link_session(session_id, customer_id)
 
@@ -71,7 +68,7 @@ def guardrail_node(state: AgentState) -> Dict[str, Any]:
 
 
 def supervisor_node(state: AgentState) -> Dict[str, Any]:
-    """Route to the appropriate specialist agent."""
+    """Route to the appropriate specialist agent or human handoff."""
     agent = get_supervisor()
     result = agent.decide(state)
     return {"routing_decision": result["routing_decision"]}
@@ -98,19 +95,39 @@ def order_node(state: AgentState) -> Dict[str, Any]:
     return {"messages": new_msgs[-1:]} if new_msgs else {}
 
 
-def respond_node(state: AgentState) -> Dict[str, Any]:
-    """Generate a natural reply for simple queries (greetings, thanks, etc.)."""
-    llm = ChatGroq(
-        model=settings.support_model,
-        temperature=0.3,
-        groq_api_key=settings.groq_api_key,
+def human_handoff_node(state: AgentState) -> Dict[str, Any]:
+    """Node that handles graceful customer support escalation."""
+    reason = state.get("escalation_reason") or "user_requested"
+    msg = (
+        "Connecting you with a human support specialist. "
+        "A manager has been notified and will review your conversation history shortly."
     )
-    prompt = SystemMessage(content=(
-        "You are a friendly e-commerce assistant. Keep responses brief and warm. "
-        "Do NOT use markdown."
-    ))
-    reply = llm.invoke([prompt] + state["messages"])
-    return {"messages": [reply]}
+    return {
+        "requires_human_approval": True,
+        "messages": [AIMessage(content=msg)],
+    }
+
+
+def respond_node(state: AgentState) -> Dict[str, Any]:
+    """Generate a natural reply for simple queries."""
+    if not settings.groq_api_key:
+        return {"messages": [AIMessage(content="Hello! How can I assist with your shopping today?")]}
+
+    try:
+        llm = ChatGroq(
+            model=settings.support_model,
+            temperature=0.3,
+            groq_api_key=settings.groq_api_key,
+        )
+        prompt = SystemMessage(content=(
+            "You are a friendly e-commerce assistant. Keep responses brief and warm. "
+            "Do NOT use markdown."
+        ))
+        reply = llm.invoke([prompt] + state["messages"])
+        return {"messages": [reply]}
+    except Exception as e:
+        logger.warning("Respond node LLM error: %s", str(e))
+        return {"messages": [AIMessage(content="Hello! How can I help you today?")]}
 
 
 def profiling_node(state: AgentState) -> Dict[str, Any]:
@@ -128,8 +145,10 @@ def profiling_node(state: AgentState) -> Dict[str, Any]:
 # Routing logic
 # ---------------------------------------------------------------------------
 
-def guardrail_router(state: AgentState) -> Literal["supervisor", "__end__"]:
-    return "__end__" if state.get("guardrail_fail") else "supervisor"
+def guardrail_router(state: AgentState) -> Literal["supervisor", "human_handoff", "__end__"]:
+    if state.get("guardrail_fail"):
+        return "human_handoff" if state.get("routing_decision") == "human_handoff" else "__end__"
+    return "supervisor"
 
 
 def supervisor_router(state: AgentState) -> str:
@@ -149,12 +168,14 @@ def build_graph() -> StateGraph:
     builder.add_node("recommendation", recommendation_node)
     builder.add_node("order", order_node)
     builder.add_node("respond", respond_node)
+    builder.add_node("human_handoff", human_handoff_node)
     builder.add_node("profiling", profiling_node)
 
     builder.set_entry_point("guardrail")
 
     builder.add_conditional_edges("guardrail", guardrail_router, {
         "supervisor": "supervisor",
+        "human_handoff": "human_handoff",
         "__end__": END,
     })
 
@@ -163,12 +184,14 @@ def build_graph() -> StateGraph:
         "recommendation": "recommendation",
         "order": "order",
         "respond": "respond",
+        "human_handoff": "human_handoff",
     })
 
     builder.add_edge("support", "profiling")
     builder.add_edge("recommendation", "profiling")
     builder.add_edge("order", "profiling")
     builder.add_edge("respond", "profiling")
+    builder.add_edge("human_handoff", END)
     builder.add_edge("profiling", END)
 
     checkpointer = MemorySaver()

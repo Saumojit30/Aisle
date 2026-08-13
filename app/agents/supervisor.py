@@ -1,47 +1,95 @@
+import re
+import logging
+from typing import Any, Dict
 from langchain_groq import ChatGroq
 from langchain_core.messages import SystemMessage
 from app.config import settings
-from typing import Any, Dict
+
+logger = logging.getLogger(__name__)
 
 PROMPT = """You route customer requests to the right specialist in an e-commerce system.
 
 Available agents:
-- support   — Returns, refunds, complaints, account help, order issues.
-- order     — Order status, tracking, cancellations, shipping info.
-- recommendation — Product suggestions, comparisons, finding items.
-- respond   — Simple greetings, thanks, farewells, or when the request is handled.
+- support         — Returns, refunds, complaints, account help, order issues.
+- order           — Order status, tracking, cancellations, shipping info.
+- recommendation  — Product suggestions, comparisons, finding items.
+- respond         — Simple greetings, thanks, farewells.
+- human_handoff   — Requests to speak to a real human, manager, or live agent.
 
 Rules:
-1. Pick the SINGLE best agent. Never guess an order ID or customer ID.
-2. Route to "respond" when the customer is just greeting, thanking, or saying goodbye.
-3. Route to "respond" if an agent already handled the request and no further action is needed.
-4. If unsure, pick "support".
-
-Respond with exactly one word — the agent name."""
+1. Pick the SINGLE best agent name.
+2. If the user explicitly asks for a human, manager, or live agent, pick "human_handoff".
+3. Respond with exactly one word — the agent name."""
 
 
 class SupervisorAgent:
     def __init__(self):
-        self.llm = ChatGroq(
-            model=settings.supervisor_model,
-            temperature=0.0,
-            groq_api_key=settings.groq_api_key,
-        )
+        self.llm = None
+        if settings.groq_api_key:
+            try:
+                self.llm = ChatGroq(
+                    model=settings.support_model,  # Fast 8B model instead of heavy 70B
+                    temperature=0.0,
+                    groq_api_key=settings.groq_api_key,
+                )
+            except Exception as e:
+                logger.warning("Could not initialize Groq LLM for supervisor: %s", str(e))
         self.system = SystemMessage(content=PROMPT)
+
+    def _fast_keyword_route(self, text: str) -> str | None:
+        lower = text.lower().strip()
+
+        # Human escalation intent
+        if any(kw in lower for kw in ["human", "live agent", "real person", "manager", "representative", "talk to person"]):
+            return "human_handoff"
+
+        # Greetings & farewells
+        if lower in ["hi", "hello", "hey", "good morning", "good evening", "thanks", "thank you", "bye", "goodbye"]:
+            return "respond"
+
+        # Order & tracking intent
+        if re.search(r'\bord-\w+', lower) or any(kw in lower for kw in ["track", "tracking", "order status", "cancel order", "cancel my order", "shipment"]):
+            return "order"
+
+        # Product recommendation intent
+        if any(kw in lower for kw in ["recommend", "buy", "product", "laptop", "headphones", "shoes", "price", "stock", "search"]):
+            return "recommendation"
+
+        # Support & refund intent
+        if any(kw in lower for kw in ["refund", "return", "broken", "complaint", "damaged", "wrong item"]):
+            return "support"
+
+        return None
 
     def decide(self, state: Dict[str, Any]) -> Dict[str, Any]:
         messages = state.get("messages", [])
         if not messages:
             return {"routing_decision": "respond"}
 
-        response = self.llm.invoke([self.system] + messages[-3:])
-        decision = response.content.strip().lower()
+        last_human_msg = ""
+        for m in reversed(messages):
+            if hasattr(m, "type") and m.type == "human":
+                last_human_msg = m.content
+                break
 
-        valid = {"support", "order", "recommendation", "respond"}
-        if decision not in valid:
-            decision = "support"
+        # Step 1: Fast Intent Matching (< 1ms)
+        fast_choice = self._fast_keyword_route(last_human_msg)
+        if fast_choice:
+            logger.info("Supervisor fast-routed to: %s", fast_choice)
+            return {"routing_decision": fast_choice}
 
-        return {"routing_decision": decision}
+        # Step 2: LLM Route Fallback
+        if self.llm:
+            try:
+                response = self.llm.invoke([self.system] + messages[-3:])
+                decision = response.content.strip().lower()
+                valid = {"support", "order", "recommendation", "respond", "human_handoff"}
+                if decision in valid:
+                    return {"routing_decision": decision}
+            except Exception as e:
+                logger.warning("LLM supervisor routing failed: %s", str(e))
+
+        return {"routing_decision": "support"}
 
 
 _supervisor: SupervisorAgent | None = None

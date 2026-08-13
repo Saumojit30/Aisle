@@ -9,10 +9,15 @@ class AgentState(TypedDict):
     session_id: str
     customer_id: Optional[str]
 
-    routing_decision: str  # "support" | "order" | "recommendation" | "respond"
+    routing_decision: str  # "support" | "order" | "recommendation" | "respond" | "human_handoff"
 
     budget_ok: bool
     budget_message: Optional[str]
 
     guardrail_fail: bool
     guardrail_message: Optional[str]
+
+    # Human-in-the-Loop & Escalation fields
+    requires_human_approval: bool
+    approval_id: Optional[str]
+    escalation_reason: Optional[str]
