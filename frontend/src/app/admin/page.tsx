@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query"
 import { fetchAdminStats, fetchCustomers } from "@/lib/api"
 import { MetricCard } from "@/components/dashboard/metric-card"
 import { CustomerProfileCard } from "@/components/admin/customer-profile-card"
+import { ApprovalQueue } from "@/components/admin/approval-queue"
 import { Users, Database, Activity, BrainCircuit } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -61,6 +62,9 @@ export default function AdminPage() {
           icon={BrainCircuit}
         />
       </div>
+
+      {/* Human Approval Queue (HITL) */}
+      <ApprovalQueue />
 
       {/* Customer Profiles */}
       <div>
