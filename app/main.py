@@ -32,7 +32,12 @@ async def lifespan(app: FastAPI):
         alert_at_percentage=settings.budget_alert_percentage,
     ))
 
-    get_content_filter()
+    from app.db.seed import seed_data
+    try:
+        await seed_data()
+        logging.info("Database initialized & seeded successfully.")
+    except Exception as e:
+        logging.warning("Database seed skipped or failed: %s", str(e))
 
     from app.graph.graph import get_graph
     get_graph()

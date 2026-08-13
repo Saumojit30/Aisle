@@ -21,11 +21,17 @@ class Settings(BaseSettings):
     google_cloud_project: Optional[str] = None
     google_cloud_location: str = "us-central1"
 
+    # Database & Security Settings
+    database_url: str = "sqlite+aiosqlite:///./aisle.db"
+    jwt_secret: str = "super-secret-aisle-key-change-in-production-12345"
+    jwt_algorithm: str = "HS256"
+    jwt_expiration_minutes: int = 1440  # 24 hours
+
     host: str = "0.0.0.0"
     port: int = 8080
     log_level: str = "INFO"
 
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+    model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
 
 
 settings = Settings()
