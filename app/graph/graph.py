@@ -3,7 +3,7 @@ from typing import Any, Dict, Literal
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
 from langchain_core.messages import AIMessage, SystemMessage
-from langchain_groq import ChatGroq
+from app.agents.llm_factory import get_llm
 
 from app.graph.state import AgentState
 from app.config import settings
@@ -110,14 +110,13 @@ def human_handoff_node(state: AgentState) -> Dict[str, Any]:
 
 def respond_node(state: AgentState) -> Dict[str, Any]:
     """Generate a natural reply for simple queries."""
-    if not settings.groq_api_key:
+    if not settings.groq_api_key and not settings.gemini_api_key:
         return {"messages": [AIMessage(content="Hello! How can I assist with your shopping today?")]}
 
     try:
-        llm = ChatGroq(
-            model=settings.support_model,
+        llm = get_llm(
+            model_name=settings.support_model,
             temperature=0.3,
-            groq_api_key=settings.groq_api_key,
         )
         prompt = SystemMessage(content=(
             "You are a friendly e-commerce assistant. Keep responses brief and warm. "

@@ -4,12 +4,14 @@ from typing import Optional
 
 class Settings(BaseSettings):
     groq_api_key: str = ""
+    gemini_api_key: str = ""
 
-    supervisor_model: str = "llama-3.3-70b-versatile"
-    support_model: str = "llama-3.1-8b-instant"
-    recommendation_model: str = "llama-3.3-70b-versatile"
-    order_model: str = "mixtral-8x7b-32768"
-    profiling_model: str = "llama-3.1-8b-instant"
+    # Default to Gemini models for the enterprise setup
+    supervisor_model: str = "gemini-2.5-pro"
+    support_model: str = "gemini-2.5-flash"
+    recommendation_model: str = "gemini-2.5-pro"
+    order_model: str = "gemini-2.5-flash"
+    profiling_model: str = "gemini-2.5-flash"
 
     max_daily_cost: float = 10.0
     max_session_cost: float = 2.0

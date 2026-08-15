@@ -1,8 +1,8 @@
-from langchain_groq import ChatGroq
 from langchain_core.messages import SystemMessage
 from langgraph.prebuilt import create_react_agent
 from app.config import settings
 from app.tools.product_tools import search_catalogue, get_product_details, check_inventory
+from app.agents.llm_factory import get_llm
 
 PROMPT = """You are a knowledgeable e-commerce shopping assistant.
 
@@ -23,10 +23,9 @@ Be enthusiastic and helpful — recommend products that genuinely fit the custom
 
 def _make_agent():
     return create_react_agent(
-        model=ChatGroq(
-            model=settings.recommendation_model,
+        model=get_llm(
+            model_name=settings.recommendation_model,
             temperature=0.3,
-            groq_api_key=settings.groq_api_key,
         ),
         tools=[search_catalogue, get_product_details, check_inventory],
         state_modifier=SystemMessage(content=PROMPT),

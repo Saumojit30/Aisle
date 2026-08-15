@@ -1,9 +1,9 @@
 import re
 import logging
 from typing import Any, Dict
-from langchain_groq import ChatGroq
 from langchain_core.messages import SystemMessage
 from app.config import settings
+from app.agents.llm_factory import get_llm
 
 logger = logging.getLogger(__name__)
 
@@ -25,15 +25,14 @@ Rules:
 class SupervisorAgent:
     def __init__(self):
         self.llm = None
-        if settings.groq_api_key:
+        if settings.groq_api_key or settings.gemini_api_key:
             try:
-                self.llm = ChatGroq(
-                    model=settings.support_model,  # Fast 8B model instead of heavy 70B
+                self.llm = get_llm(
+                    model_name=settings.support_model,  # Uses supervisor_model or support_model as config
                     temperature=0.0,
-                    groq_api_key=settings.groq_api_key,
                 )
             except Exception as e:
-                logger.warning("Could not initialize Groq LLM for supervisor: %s", str(e))
+                logger.warning("Could not initialize LLM for supervisor: %s", str(e))
         self.system = SystemMessage(content=PROMPT)
 
     def _fast_keyword_route(self, text: str) -> str | None:

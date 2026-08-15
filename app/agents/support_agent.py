@@ -1,8 +1,8 @@
-from langchain_groq import ChatGroq
 from langchain_core.messages import SystemMessage
 from langgraph.prebuilt import create_react_agent
 from app.config import settings
 from app.tools.order_tools import get_order_status, track_shipment, cancel_order
+from app.agents.llm_factory import get_llm
 
 PROMPT = """You are a helpful e-commerce customer support agent.
 
@@ -18,10 +18,9 @@ If a cancellation succeeds, explain the refund process."""
 
 def _make_agent():
     return create_react_agent(
-        model=ChatGroq(
-            model=settings.support_model,
+        model=get_llm(
+            model_name=settings.support_model,
             temperature=0.2,
-            groq_api_key=settings.groq_api_key,
         ),
         tools=[get_order_status, track_shipment, cancel_order],
         state_modifier=SystemMessage(content=PROMPT),

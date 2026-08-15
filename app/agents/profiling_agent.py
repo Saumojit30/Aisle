@@ -1,8 +1,8 @@
 import logging
-from langchain_groq import ChatGroq
 from langchain_core.messages import SystemMessage, HumanMessage
 from app.config import settings
 from app.memory.customer_memory import get_customer_memory
+from app.agents.llm_factory import get_llm
 from typing import Any, Dict
 
 logger = logging.getLogger(__name__)
@@ -26,10 +26,9 @@ def run(customer_id: str, messages: list) -> Dict[str, Any]:
     if not chat_messages:
         return profile
 
-    llm = ChatGroq(
-        model=settings.profiling_model,
+    llm = get_llm(
+        model_name=settings.profiling_model,
         temperature=0.0,
-        groq_api_key=settings.groq_api_key,
     )
 
     try:

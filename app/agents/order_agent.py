@@ -1,8 +1,8 @@
-from langchain_groq import ChatGroq
 from langchain_core.messages import SystemMessage
 from langgraph.prebuilt import create_react_agent
 from app.config import settings
 from app.tools.order_tools import get_order_status, track_shipment, cancel_order, get_order_history
+from app.agents.llm_factory import get_llm
 
 PROMPT = """You are an e-commerce order management assistant.
 
@@ -18,10 +18,9 @@ Be clear and concise — avoid markdown in responses."""
 
 def _make_agent():
     return create_react_agent(
-        model=ChatGroq(
-            model=settings.order_model,
+        model=get_llm(
+            model_name=settings.order_model,
             temperature=0.1,
-            groq_api_key=settings.groq_api_key,
         ),
         tools=[get_order_status, track_shipment, cancel_order, get_order_history],
         state_modifier=SystemMessage(content=PROMPT),
