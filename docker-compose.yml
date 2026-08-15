@@ -23,10 +23,11 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: aisle_backend
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
     environment:
       - DATABASE_URL=postgresql+asyncpg://aisle_user:aisle_password@postgres:5432/aisle_db
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
       - GROQ_API_KEY=${GROQ_API_KEY}
       - JWT_SECRET=${JWT_SECRET:-super-secret-aisle-key-change-in-production-12345}
       - HOST=0.0.0.0
@@ -40,12 +41,23 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: aisle_frontend
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8080
+      - NEXT_PUBLIC_API_URL=http://localhost/api
     depends_on:
       - backend
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: aisle_nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - frontend
 
 volumes:
   postgres_data:
