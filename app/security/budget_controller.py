@@ -8,12 +8,15 @@ from datetime import datetime, date
 logger = logging.getLogger(__name__)
 
 
-# Cost per 1K tokens (Groq pricing as of 2025)
 MODEL_COST_MAP: Dict[str, tuple[float, float]] = {
+    # Groq model rates per 1K tokens
     "llama-3.3-70b-versatile": (0.00059, 0.00079),
     "llama-3.1-8b-instant": (0.00005, 0.00008),
     "mixtral-8x7b-32768": (0.00024, 0.00024),
     "gemma2-9b-it": (0.00008, 0.00008),
+    # Gemini 2.5 model rates per 1K tokens
+    "gemini-2.5-pro": (0.00125, 0.01000),
+    "gemini-2.5-flash": (0.00030, 0.00250),
 }
 
 
