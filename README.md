@@ -1,12 +1,28 @@
-# Aisle: Enterprise Multi-Agent AI E-Commerce Platform
+# Aisle: Enterprise AI-Powered Shopping Assistant & Support Platform
 
-A production-grade, state-driven multi-agent AI e-commerce platform built with **LangGraph**, **FastAPI**, **SQLModel/PostgreSQL**, **Next.js**, and powered by **Google Gemini** models.
-
-Aisle addresses real-world enterprise engineering challenges: **ingress routing via Nginx Reverse Proxy**, **hybrid routing (Google Gemini + fast-path regex)**, **persistent database state**, **Human-in-the-Loop (HITL) manager approvals**, **Microsoft Presidio NLP PII redaction**, **JWT authentication**, and a **dynamic LLM provider factory**.
+Aisle is a production-grade, state-driven multi-agent AI e-commerce platform built with **LangGraph**, **FastAPI**, **SQLModel/PostgreSQL**, and **Next.js**, powered by **Google Gemini** models.
 
 ---
 
-## 🌟 Core Features (Portfolio Showcase Highlights)
+## 🎯 What is Aisle? (The Project Objective)
+
+Aisle is designed to act as an **autonomous, end-to-end AI assistant for e-commerce storefronts**. Its primary business objective is to bridge the gap between traditional static e-commerce interfaces and conversational AI by acting as a virtual retail assistant. 
+
+### 1. For Customers (The Conversational Storefront)
+Instead of manually navigating product categories, searching order tables, or filling out support forms, customers interact with a single conversational interface to:
+*   **Discover & Compare Products:** Ask the assistant for recommendations (e.g., *"Suggest some wireless headphones under $100"*), search the real-time catalog, compare options, and check stock.
+*   **Manage Orders & Tracking:** Query order status, track shipments (e.g., *"Where is my order ORD-1001?"*), view purchase history, or request order cancellations using natural language.
+*   **Get Instant Customer Support:** Resolve queries regarding store policies, returns, and refunds without waiting for email responses.
+
+### 2. For E-Commerce Businesses (The Automation & Governance Engine)
+Aisle automates routine transactions while enforcing strict enterprise compliance and security:
+*   **Human-in-the-Loop (HITL) Safety:** Automates routine tasks but intercepts high-risk financial actions (such as order cancellations or refund requests) and holds them in a queue for manual admin manager approval.
+*   **Data Privacy & Compliance:** Uses NLP scanners to scrub sensitive customer data (credit card numbers, emails, SSN, IP addresses) before it is sent to external LLM APIs.
+*   **Operational Budget Caps:** Prevents runaway API costs by tracking and enforcing budget ceilings on token consumption and request frequencies per user session.
+
+---
+
+## 🌟 Technical Highlights (Portfolio Showcase)
 
 Unlike basic AI chatbot wrappers that rely on in-memory state and single system prompts, Aisle is architected for production reliability:
 
