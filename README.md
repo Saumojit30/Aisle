@@ -22,7 +22,7 @@ Aisle automates routine transactions while enforcing strict enterprise complianc
 
 ---
 
-## 🌟 Technical Highlights (Portfolio Showcase)
+## 🌟 Technical Highlights
 
 Unlike basic AI chatbot wrappers that rely on in-memory state and single system prompts, Aisle is architected for production reliability:
 
@@ -42,20 +42,20 @@ Unlike basic AI chatbot wrappers that rely on in-memory state and single system 
 ```mermaid
 graph TD
     User["Browser / Client"] -->|Port 80| Proxy["Nginx Reverse Proxy"]
-    Proxy -->|"/api/*"| API["FastAPI Gateway"]
-    Proxy -->|"/*"| Front["Next.js Storefront"]
+    Proxy -->|API Routes| API["FastAPI Gateway"]
+    Proxy -->|Web Storefront| Front["Next.js Storefront"]
     
     API --> Auth["JWT Auth & RBAC"]
     API --> Guard["Presidio PII + Security Scanner"]
     Guard --> Graph["LangGraph StateGraph"]
-    Graph --> Supervisor["Fast Intent Router (<10ms)"]
+    Graph --> Supervisor["Fast Intent Router (under 10ms)"]
     
     Supervisor -->|Order Queries| OrderAgent["Order Specialist Agent (Gemini 2.5 Flash)"]
     Supervisor -->|Product Queries| RecAgent["Recommendation Agent (Gemini 2.5 Pro)"]
     Supervisor -->|Support Queries| SupportAgent["Customer Support Agent (Gemini 2.5 Flash)"]
     Supervisor -->|Human Escalation| HandoffNode["Human Handoff Node"]
     
-    OrderAgent --> DB[("PostgreSQL / SQLite Database")]
+    OrderAgent --> DB["PostgreSQL / SQLite Database"]
     RecAgent --> DB
     SupportAgent --> DB
     
