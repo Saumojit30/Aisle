@@ -100,6 +100,23 @@ For operations that represent financial or operational risk (such as order cance
 
 ---
 
+## ⚖️ Project Demo vs. Production Design Trade-offs
+
+When evaluating this platform, it is critical to distinguish between configurations designed to **protect public demos** and architecture optimized for a **live e-commerce production system**:
+
+### 🚫 The Hard Budget Cutoff
+*   **In this Demo:** If a user session consumes more than `$2.00` in LLM costs or spams the endpoint, the budget controller triggers a hard block and escalates to human handoff. This is a security measure designed to **protect the developer's personal wallet and API keys** from bot attacks and runaway public traffic.
+*   **In a Production System:** A hard block on a hot lead is counterproductive and leads to **cart abandonment**. An enterprise production setup would replace the hard cutoff with:
+    *   **Dynamic, Cart-Value Budgets:** Scale the session budget dynamically (e.g., if a user has a $500 cart, automatically increase their chat budget to $10.00).
+    *   **Tiered Rate Limits:** Apply tight restrictions on anonymous guest users while offering high/unlimited access to verified, logged-in loyalty customers.
+    *   **Graceful Model Degradation:** Instead of blocking, swap the active model from `gemini-2.5-pro` to the cheaper `gemini-2.5-flash`, or drop back to static template searches to keep the customer engaged while lowering token costs.
+
+### 💾 In-Memory Checkpoints
+*   **In this Demo:** LangGraph state is persisted using an in-memory `MemorySaver`.
+*   **In a Production System:** This would be replaced with a distributed checkpointer (such as `PostgresSaver` or a Redis cluster) to ensure chat sessions are persisted across server restarts and scale-out container groups.
+
+---
+
 ## 🤖 Gemini & LLM Configuration
 
 The project utilizes a dynamic model factory (`llm_factory.py`) that decides whether to run a Google Gemini model or a Groq Llama/Mixtral model based on the configuration inside your `.env` file.
