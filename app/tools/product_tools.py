@@ -1,9 +1,9 @@
 from typing import Optional
-import asyncio
 from langchain_core.tools import tool
 from sqlmodel import select
 from app.db.database import async_session_maker
 from app.db.models import Product
+from app.tools.utils import run_async_sync
 
 # Fallback catalog for initial sync context if DB is initializing
 _FALLBACK_CATALOGUE = [
@@ -24,31 +24,24 @@ async def _search_products_db(query: str, category: Optional[str] = None, max_pr
         res = await session.execute(statement)
         products = res.scalars().all()
 
-        query_lower = query.lower()
+        query_lower = query.lower().strip()
         matched = []
         for p in products:
-            if (
+            if not query_lower or (
                 query_lower in p.name.lower()
                 or query_lower in p.category.lower()
                 or query_lower in p.description.lower()
                 or any(query_lower in t.lower() for t in p.tags)
             ):
                 matched.append(p)
-        return matched if matched else list(products[:5])
+        return matched
 
 
 @tool
 def search_catalogue(query: str, category: Optional[str] = None, max_price: Optional[float] = None) -> str:
     """Search the product catalogue in the database. Filter by query, category, or max price."""
     try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            # Run in event loop thread
-            import nest_asyncio
-            nest_asyncio.apply()
-            products = loop.run_until_complete(_search_products_db(query, category, max_price))
-        else:
-            products = asyncio.run(_search_products_db(query, category, max_price))
+        products = run_async_sync(_search_products_db(query, category, max_price))
     except Exception:
         # Fallback to local filtering
         products = [
@@ -75,8 +68,10 @@ async def _get_product_db(product_id: str) -> Optional[Product]:
 def get_product_details(product_id: str) -> str:
     """Get full details for a specific product by its ID."""
     try:
-        p = asyncio.run(_get_product_db(product_id))
-    except Exception:
+        p = run_async_sync(_get_product_db(product_id))
+    except Exception as e:
+        import traceback, sys
+        traceback.print_exc(file=sys.stderr)
         p = None
 
     if p:
@@ -95,7 +90,7 @@ def get_product_details(product_id: str) -> str:
 def check_inventory(product_id: str) -> str:
     """Check stock level for a product."""
     try:
-        p = asyncio.run(_get_product_db(product_id))
+        p = run_async_sync(_get_product_db(product_id))
     except Exception:
         p = None
 

@@ -1,9 +1,9 @@
 from typing import Optional
-import asyncio
 from langchain_core.tools import tool
 from sqlmodel import select
 from app.db.database import async_session_maker
 from app.db.models import Order, PendingApproval
+from app.tools.utils import run_async_sync
 
 
 async def _get_order_db(order_id: str) -> Optional[Order]:
@@ -16,7 +16,7 @@ async def _get_order_db(order_id: str) -> Optional[Order]:
 def get_order_status(order_id: str) -> str:
     """Look up the current status and details of an order from the database."""
     try:
-        order = asyncio.run(_get_order_db(order_id))
+        order = run_async_sync(_get_order_db(order_id))
     except Exception:
         order = None
 
@@ -40,7 +40,7 @@ def get_order_status(order_id: str) -> str:
 def track_shipment(order_id: str) -> str:
     """Get tracking information for a shipped order."""
     try:
-        order = asyncio.run(_get_order_db(order_id))
+        order = run_async_sync(_get_order_db(order_id))
     except Exception:
         order = None
 
@@ -77,7 +77,7 @@ async def _cancel_order_db(order_id: str, reason: str) -> str:
 def cancel_order(order_id: str, reason: str) -> str:
     """Cancel an order that hasn't shipped yet. Provide the order ID and reason."""
     try:
-        return asyncio.run(_cancel_order_db(order_id, reason))
+        return run_async_sync(_cancel_order_db(order_id, reason))
     except Exception as e:
         return f"Failed to cancel order '{order_id}': {str(e)}"
 
@@ -101,6 +101,6 @@ async def _get_order_history_db(customer_id: str, limit: int = 10) -> str:
 def get_order_history(customer_id: str, limit: Optional[int] = 10) -> str:
     """Retrieve recent orders for a customer."""
     try:
-        return asyncio.run(_get_order_history_db(customer_id, limit or 10))
+        return run_async_sync(_get_order_history_db(customer_id, limit or 10))
     except Exception as e:
         return f"Failed to fetch order history: {str(e)}"

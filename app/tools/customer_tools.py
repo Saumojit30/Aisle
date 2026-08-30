@@ -1,9 +1,9 @@
 from typing import Optional
-import asyncio
 from langchain_core.tools import tool
 from sqlmodel import select
 from app.db.database import async_session_maker
 from app.db.models import CustomerProfile, User
+from app.tools.utils import run_async_sync
 
 
 async def _get_customer_profile_db(customer_id: str) -> Optional[dict]:
@@ -36,7 +36,7 @@ async def _get_customer_profile_db(customer_id: str) -> Optional[dict]:
 def get_customer_profile(customer_id: str) -> str:
     """Look up basic profile information for a customer from the database."""
     try:
-        data = asyncio.run(_get_customer_profile_db(customer_id))
+        data = run_async_sync(_get_customer_profile_db(customer_id))
     except Exception:
         data = None
 
