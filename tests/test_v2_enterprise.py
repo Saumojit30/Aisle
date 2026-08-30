@@ -1,5 +1,6 @@
 import pytest
 import asyncio
+from langchain_core.messages import HumanMessage
 from app.security.auth import hash_password, verify_password, create_access_token, decode_access_token
 from app.security.content_filter import ContentFilter
 from app.agents.supervisor import SupervisorAgent
@@ -50,33 +51,35 @@ def test_fast_intent_supervisor_routing():
     supervisor = SupervisorAgent()
     
     # Test tracking intent
-    res_track = supervisor.decide({"messages": [{"type": "human", "content": "Where is my order ORD-1001?"}]})
+    res_track = supervisor.decide({"messages": [HumanMessage(content="Where is my order ORD-1001?")]})
     assert res_track["routing_decision"] == "order"
 
     # Test human handoff intent
-    res_human = supervisor.decide({"messages": [{"type": "human", "content": "I want to speak to a real manager please"}]})
+    res_human = supervisor.decide({"messages": [HumanMessage(content="I want to speak to a real manager please")]})
     assert res_human["routing_decision"] == "human_handoff"
 
     # Test recommendation intent
-    res_rec = supervisor.decide({"messages": [{"type": "human", "content": "Can you recommend wireless headphones?"}]})
+    res_rec = supervisor.decide({"messages": [HumanMessage(content="Can you recommend wireless headphones?")]})
     assert res_rec["routing_decision"] == "recommendation"
 
     # Test greeting intent
-    res_greet = supervisor.decide({"messages": [{"type": "human", "content": "hello"}]})
+    res_greet = supervisor.decide({"messages": [HumanMessage(content="hello")]})
     assert res_greet["routing_decision"] == "respond"
 
 
 @pytest.mark.asyncio
 async def test_database_init_and_models():
+    import uuid
     await init_db()
+    test_id = f"prod_test_{uuid.uuid4().hex[:6]}"
     async with async_session_maker() as session:
         # Create test product
-        p = Product(id="prod_test_99", name="Test Widget", category="Testing", price=9.99, inventory=5)
+        p = Product(id=test_id, name="Test Widget", category="Testing", price=9.99, inventory=5, description="A test description")
         session.add(p)
         await session.commit()
 
         # Query back
-        res = await session.execute(select(Product).where(Product.id == "prod_test_99"))
+        res = await session.execute(select(Product).where(Product.id == test_id))
         fetched = res.scalar_one_or_none()
         assert fetched is not None
         assert fetched.name == "Test Widget"
