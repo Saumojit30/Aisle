@@ -5,10 +5,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import async_engine, async_session_maker, init_db
 from app.db.models import User, Product, Order, CustomerProfile
-from passlib.context import CryptContext
+from app.security.auth import hash_password
 
 logger = logging.getLogger(__name__)
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 INITIAL_PRODUCTS = [
@@ -123,7 +122,7 @@ async def seed_data():
             cust_user = User(
                 id="usr_cust_123",
                 email="customer@example.com",
-                hashed_password=pwd_context.hash("password123"),
+                hashed_password=hash_password("password123"),
                 role="customer",
             )
             session.add(cust_user)
@@ -140,7 +139,7 @@ async def seed_data():
             admin_user = User(
                 id="usr_admin_999",
                 email="admin@aisle.com",
-                hashed_password=pwd_context.hash("admin123"),
+                hashed_password=hash_password("admin123"),
                 role="admin",
             )
             session.add(admin_user)
