@@ -9,14 +9,20 @@ logger = logging.getLogger(__name__)
 
 
 MODEL_COST_MAP: Dict[str, tuple[float, float]] = {
-    # Groq model rates per 1K tokens
+    # Groq model rates per 1K tokens (Active)
     "llama-3.3-70b-versatile": (0.00059, 0.00079),
     "llama-3.1-8b-instant": (0.00005, 0.00008),
+    "openai/gpt-oss-120b": (0.00015, 0.00060),
+    "openai/gpt-oss-20b": (0.000075, 0.00030),
+    "qwen/qwen3.6-27b": (0.00060, 0.00300),
+    "qwen/qwen3.8-27b": (0.00080, 0.00400),
+    # Groq model rates per 1K tokens (Deprecated/Legacy)
     "mixtral-8x7b-32768": (0.00024, 0.00024),
     "gemma2-9b-it": (0.00008, 0.00008),
     # Gemini 2.5 model rates per 1K tokens
     "gemini-2.5-pro": (0.00125, 0.01000),
     "gemini-2.5-flash": (0.00030, 0.00250),
+    "gemini-2.5-flash-lite": (0.00010, 0.00040),
 }
 
 
