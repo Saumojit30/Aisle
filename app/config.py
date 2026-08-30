@@ -7,11 +7,11 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
 
     # Default to Gemini models for the enterprise setup
-    supervisor_model: str = "gemini-2.5-pro"
-    support_model: str = "gemini-2.5-flash"
-    recommendation_model: str = "gemini-2.5-pro"
-    order_model: str = "gemini-2.5-flash"
-    profiling_model: str = "gemini-2.5-flash"
+    supervisor_model: str = "gemini-2.5-flash"
+    support_model: str = "gemini-2.5-flash-lite"
+    recommendation_model: str = "gemini-2.5-flash"
+    order_model: str = "gemini-2.5-flash-lite"
+    profiling_model: str = "gemini-2.5-flash-lite"
 
     max_daily_cost: float = 10.0
     max_session_cost: float = 2.0
