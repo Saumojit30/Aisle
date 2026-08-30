@@ -18,9 +18,9 @@ Return ONLY a JSON object with these optional fields (omit fields that aren't re
 }"""
 
 
-def run(customer_id: str, messages: list) -> Dict[str, Any]:
+async def run(customer_id: str, messages: list) -> Dict[str, Any]:
     memory = get_customer_memory()
-    profile = memory.get_or_create(customer_id)
+    profile = await memory.get_or_create(customer_id)
 
     chat_messages = [m for m in messages if hasattr(m, "type") and m.type in ("human", "ai")]
     if not chat_messages:
@@ -32,7 +32,7 @@ def run(customer_id: str, messages: list) -> Dict[str, Any]:
     )
 
     try:
-        response = llm.invoke([
+        response = await llm.ainvoke([
             SystemMessage(content=PROMPT),
             HumanMessage(content="\n".join(
                 f"{'Customer' if m.type == 'human' else 'Agent'}: {m.content}"
@@ -48,17 +48,17 @@ def run(customer_id: str, messages: list) -> Dict[str, Any]:
 
         if "preferred_categories" in data:
             for cat in data["preferred_categories"]:
-                memory.update_preference(customer_id, cat, True)
+                await memory.update_preference(customer_id, cat, True)
 
         if "interests" in data:
             for interest in data["interests"]:
-                memory.add_interest(customer_id, interest)
+                await memory.add_interest(customer_id, interest)
 
         if "summary" in data:
-            memory.update_preference(customer_id, "_summary", data["summary"])
+            await memory.update_preference(customer_id, "_summary", data["summary"])
 
         logger.info("Profiling complete for %s", customer_id)
     except Exception:
         logger.exception("Profiling failed for %s", customer_id)
 
-    return memory.get_or_create(customer_id)
+    return await memory.get_or_create(customer_id)

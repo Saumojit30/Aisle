@@ -129,14 +129,14 @@ def respond_node(state: AgentState) -> Dict[str, Any]:
         return {"messages": [AIMessage(content="Hello! How can I help you today?")]}
 
 
-def profiling_node(state: AgentState) -> Dict[str, Any]:
+async def profiling_node(state: AgentState) -> Dict[str, Any]:
     """Silently extract preferences from the conversation (side-effect only)."""
     customer_id = state.get("customer_id")
     if not customer_id:
         return {}
 
     from app.agents.profiling_agent import run as profile_run
-    profile_run(customer_id, state["messages"])
+    await profile_run(customer_id, state["messages"])
     return {}
 
 
