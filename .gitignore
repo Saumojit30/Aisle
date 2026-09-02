@@ -12,3 +12,4 @@ node_modules/
 deployment_navigator.md
 AWS_MIGRATION.md
 ROADMAP.md
+*.db
