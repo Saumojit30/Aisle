@@ -33,10 +33,11 @@ interface PipelineNodeProps {
   name: PipelineNodeType
   status: "pending" | "active" | "completed" | "failed" | "skipped"
   result?: string
+  elapsed_ms?: number
   isLast?: boolean
 }
 
-export function PipelineNode({ name, status, result, isLast }: PipelineNodeProps) {
+export function PipelineNode({ name, status, result, elapsed_ms, isLast }: PipelineNodeProps) {
   const config = nodeConfig[name]
   const Icon = config.icon
 
@@ -105,18 +106,27 @@ export function PipelineNode({ name, status, result, isLast }: PipelineNodeProps
         )}
       </motion.div>
 
-      {/* Result badge */}
-      {result && status === "completed" && (
-        <motion.div
-          initial={{ opacity: 0, y: -5 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="absolute -top-2 -right-2"
-        >
-          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-medium">
+      {/* Latency & Result badges */}
+      <div className="absolute -top-2 -right-2 flex items-center gap-1 z-10">
+        {elapsed_ms !== undefined && status === "completed" && (
+          <motion.span
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-mono font-medium shadow-xs"
+          >
+            {elapsed_ms < 1000 ? `${elapsed_ms}ms` : `${(elapsed_ms / 1000).toFixed(1)}s`}
+          </motion.span>
+        )}
+        {result && status === "completed" && (
+          <motion.span
+            initial={{ opacity: 0, y: -5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 font-medium shadow-xs"
+          >
             {result}
-          </span>
-        </motion.div>
-      )}
+          </motion.span>
+        )}
+      </div>
 
       {/* Connecting line */}
       {!isLast && (

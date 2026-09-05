@@ -32,6 +32,10 @@ services:
       - JWT_SECRET=${JWT_SECRET:-super-secret-aisle-key-change-in-production-12345}
       - HOST=0.0.0.0
       - PORT=8080
+    secrets:
+      - gemini_api_key
+      - groq_api_key
+      - jwt_secret
     depends_on:
       postgres:
         condition: service_healthy
@@ -63,3 +67,11 @@ services:
 
 volumes:
   postgres_data:
+
+secrets:
+  gemini_api_key:
+    environment: "GEMINI_API_KEY"
+  groq_api_key:
+    environment: "GROQ_API_KEY"
+  jwt_secret:
+    environment: "JWT_SECRET"

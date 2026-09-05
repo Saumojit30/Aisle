@@ -5,7 +5,7 @@ interface ChatState {
   messages: Message[]
   sessionId: string | null
   customerId: string | null
-  pipelineState: Record<PipelineNode, { status: "pending" | "active" | "completed" | "failed" | "skipped"; result?: string }>
+  pipelineState: Record<PipelineNode, { status: "pending" | "active" | "completed" | "failed" | "skipped"; result?: string; elapsed_ms?: number }>
   activeToolCalls: ToolEvent[]
   profilingData: ProfilingEvent | null
   isProcessing: boolean
@@ -14,7 +14,7 @@ interface ChatState {
   addMessage: (msg: Message) => void
   setSessionId: (id: string) => void
   setCustomerId: (id: string | null) => void
-  setPipelineNode: (node: PipelineNode, status: NodeEvent["status"], result?: string) => void
+  setPipelineNode: (node: PipelineNode, status: NodeEvent["status"], result?: string, elapsed_ms?: number) => void
   resetPipeline: () => void
   addToolEvent: (event: ToolEvent) => void
   setProfilingData: (data: ProfilingEvent | null) => void
@@ -49,11 +49,11 @@ export const useChatStore = create<ChatState>((set) => ({
   setSessionId: (id) => set({ sessionId: id }),
   setCustomerId: (id) => set({ customerId: id }),
 
-  setPipelineNode: (node, status, result) =>
+  setPipelineNode: (node, status, result, elapsed_ms) =>
     set((s) => ({
       pipelineState: {
         ...s.pipelineState,
-        [node]: { status, result },
+        [node]: { status, result, elapsed_ms: elapsed_ms ?? s.pipelineState[node]?.elapsed_ms },
       },
     })),
 

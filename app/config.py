@@ -1,3 +1,4 @@
+import os
 from pydantic_settings import BaseSettings
 from typing import Optional
 
@@ -5,6 +6,10 @@ from typing import Optional
 class Settings(BaseSettings):
     groq_api_key: str = ""
     gemini_api_key: str = ""
+
+    groq_api_key_file: Optional[str] = "/run/secrets/groq_api_key"
+    gemini_api_key_file: Optional[str] = "/run/secrets/gemini_api_key"
+    jwt_secret_file: Optional[str] = "/run/secrets/jwt_secret"
 
     # Default to Gemini models for the enterprise setup
     supervisor_model: str = "gemini-2.5-flash"
@@ -34,6 +39,24 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
+
+    def model_post_init(self, __context):
+        # Load from Docker secrets files if present and env var is not set
+        for secret_attr, file_attr in [
+            ("gemini_api_key", "gemini_api_key_file"),
+            ("groq_api_key", "groq_api_key_file"),
+            ("jwt_secret", "jwt_secret_file"),
+        ]:
+            val = getattr(self, secret_attr)
+            filePath = getattr(self, file_attr, None)
+            if (not val or val == "super-secret-aisle-key-change-in-production-12345") and filePath and os.path.exists(filePath):
+                try:
+                    with open(filePath, "r", encoding="utf-8") as f:
+                        secret_val = f.read().strip()
+                        if secret_val:
+                            setattr(self, secret_attr, secret_val)
+                except Exception:
+                    pass
 
 
 settings = Settings()

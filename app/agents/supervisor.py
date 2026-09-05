@@ -43,11 +43,11 @@ class SupervisorAgent:
             return "human_handoff"
 
         # Greetings & farewells
-        if lower in ["hi", "hello", "hey", "good morning", "good evening", "thanks", "thank you", "bye", "goodbye"]:
+        if any(kw in lower for kw in ["hi", "hello", "hey", "good morning", "good evening", "thanks", "thank you", "bye", "goodbye"]):
             return "respond"
 
         # Order & tracking intent
-        if re.search(r'\bord-\w+', lower) or any(kw in lower for kw in ["track", "tracking", "order status", "cancel order", "cancel my order", "shipment"]):
+        if re.search(r'\bord[_-]\w+', lower) or any(kw in lower for kw in ["order", "track", "tracking", "order status", "cancel order", "cancel my order", "shipment"]):
             return "order"
 
         # Product recommendation intent

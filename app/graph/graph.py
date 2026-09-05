@@ -60,10 +60,15 @@ def guardrail_node(state: AgentState) -> Dict[str, Any]:
     if customer_id:
         get_customer_memory().link_session(session_id, customer_id)
 
+    is_degraded = budget.should_degrade(session_id)
+    if is_degraded:
+        logger.warning("Session %s approaching budget limit -> activating DEGRADED mode", session_id)
+
     return {
         "budget_ok": True,
         "guardrail_fail": False,
         "guardrail_message": None,
+        "degraded_mode": is_degraded,
     }
 
 
@@ -158,7 +163,7 @@ def supervisor_router(state: AgentState) -> str:
 # Build the graph
 # ---------------------------------------------------------------------------
 
-def build_graph() -> StateGraph:
+def build_graph(checkpointer=None) -> StateGraph:
     builder = StateGraph(AgentState)
 
     builder.add_node("guardrail", guardrail_node)
@@ -193,7 +198,8 @@ def build_graph() -> StateGraph:
     builder.add_edge("human_handoff", END)
     builder.add_edge("profiling", END)
 
-    checkpointer = MemorySaver()
+    if checkpointer is None:
+        checkpointer = MemorySaver()
     return builder.compile(checkpointer=checkpointer)
 
 
@@ -204,8 +210,8 @@ def build_graph() -> StateGraph:
 _graph = None
 
 
-def get_graph():
+def get_graph(checkpointer=None):
     global _graph
     if _graph is None:
-        _graph = build_graph()
+        _graph = build_graph(checkpointer=checkpointer)
     return _graph

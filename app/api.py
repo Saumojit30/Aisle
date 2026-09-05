@@ -209,6 +209,7 @@ async def chat_stream(
     config = {"configurable": {"thread_id": session_id}}
 
     async def event_stream() -> AsyncGenerator[str, None]:
+        node_start_times: dict[str, float] = {}
         try:
             async for event in graph.astream_events(state, config, version="v2"):
                 kind = event.get("event", "")
@@ -218,12 +219,18 @@ async def chat_stream(
                     "guardrail", "supervisor", "support", "order",
                     "recommendation", "respond", "profiling"
                 ):
+                    import time
+                    node_start_times[node] = time.perf_counter()
                     yield f"event: node_start\ndata: {json.dumps({'node': node, 'timestamp': str(asyncio.get_event_loop().time())})}\n\n"
 
                 elif kind == "on_chain_end" and node in (
                     "guardrail", "supervisor", "support", "order",
                     "recommendation", "respond", "profiling"
                 ):
+                    import time
+                    start_t = node_start_times.get(node)
+                    elapsed_ms = int((time.perf_counter() - start_t) * 1000) if start_t is not None else None
+
                     output = event.get("data", {}).get("output", {})
                     result = ""
                     if isinstance(output, dict):
@@ -234,9 +241,17 @@ async def chat_stream(
                         elif node == "profiling":
                             result = "done"
 
+                    payload = {
+                        'node': node,
+                        'result': result,
+                        'timestamp': str(asyncio.get_event_loop().time())
+                    }
+                    if elapsed_ms is not None:
+                        payload['elapsed_ms'] = elapsed_ms
+
                     yield (
                         f"event: node_end\n"
-                        f"data: {json.dumps({'node': node, 'result': result, 'timestamp': str(asyncio.get_event_loop().time())})}\n\n"
+                        f"data: {json.dumps(payload)}\n\n"
                     )
 
                 elif kind == "on_tool_start":

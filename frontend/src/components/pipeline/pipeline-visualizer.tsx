@@ -102,6 +102,7 @@ export function PipelineVisualizer() {
                     name={nodeName}
                     status={state.status}
                     result={state.result}
+                    elapsed_ms={state.elapsed_ms}
                     isLast={idx === nodeOrder.length - 1}
                   />
 

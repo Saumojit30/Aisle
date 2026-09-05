@@ -21,3 +21,6 @@ class AgentState(TypedDict):
     requires_human_approval: bool
     approval_id: Optional[str]
     escalation_reason: Optional[str]
+
+    # Dynamic Model Degradation field
+    degraded_mode: Optional[bool]

@@ -22,6 +22,7 @@ export interface NodeEvent {
   status: "pending" | "active" | "completed" | "failed" | "skipped"
   timestamp?: string
   result?: string
+  elapsed_ms?: number
   details?: Record<string, unknown>
 }
 

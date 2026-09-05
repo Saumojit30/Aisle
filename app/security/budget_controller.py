@@ -80,6 +80,15 @@ class BudgetController:
 
             return True, None
 
+    def should_degrade(self, session_id: str) -> bool:
+        """Returns True if the session cost or daily cost exceeds the warning threshold (alert_at_percentage)."""
+        with self._lock:
+            self._reset_daily_if_needed()
+            session_cost = self._session_cost.get(session_id, 0.0)
+            session_pct = (session_cost / self.config.max_session_cost) if self.config.max_session_cost > 0 else 0.0
+            daily_pct = (self._daily_cost / self.config.max_daily_cost) if self.config.max_daily_cost > 0 else 0.0
+            return session_pct >= self.config.alert_at_percentage or daily_pct >= self.config.alert_at_percentage
+
     def record_usage(self, session_id: str, model: str, input_tokens: int, output_tokens: int) -> None:
         cost = self.estimate_cost(model, input_tokens, output_tokens)
         total_tokens = input_tokens + output_tokens
