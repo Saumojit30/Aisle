@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Check, X, ShieldAlert, RefreshCw } from "lucide-react";
 
 interface PendingApproval {
-  id: str;
+  id: string;
   thread_id: string;
   session_id: string;
   customer_id: string;
