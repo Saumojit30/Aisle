@@ -39,7 +39,11 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logging.warning("Database seed skipped or failed: %s", str(e))
 
-    from app.graph.graph import get_graph
+    from app.graph.graph import get_graph, setup_checkpointer
+    try:
+        await setup_checkpointer()
+    except Exception as e:
+        logging.warning("Checkpointer setup skipped: %s", str(e))
     get_graph()
 
     logging.info("E-commerce agent ready — budget: $%.2f/day", settings.max_daily_cost)
@@ -54,9 +58,15 @@ def create_app() -> FastAPI:
         version="0.1.0",
         lifespan=lifespan,
     )
+
+    origins = [orig.strip() for orig in settings.cors_origins.split(",") if orig.strip()]
+    if not origins:
+        origins = ["*"]
+
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=origins if "*" not in origins else ["*"],
+        allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )

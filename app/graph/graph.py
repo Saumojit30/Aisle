@@ -199,19 +199,62 @@ def build_graph(checkpointer=None) -> StateGraph:
     builder.add_edge("profiling", END)
 
     if checkpointer is None:
-        checkpointer = MemorySaver()
+        checkpointer = get_default_checkpointer()
     return builder.compile(checkpointer=checkpointer)
 
 
 # ---------------------------------------------------------------------------
-# Singleton
+# Checkpointer Factory & Singleton
 # ---------------------------------------------------------------------------
 
 _graph = None
+_checkpointer = None
+
+
+def get_default_checkpointer():
+    """Return persistent Postgres saver if postgres DATABASE_URL is configured, else MemorySaver."""
+    global _checkpointer
+    if _checkpointer is not None:
+        return _checkpointer
+
+    db_url = settings.database_url
+    if "postgres" in db_url.lower():
+        try:
+            # Normalize to standard postgresql:// URI for psycopg pool
+            clean_url = db_url.replace("postgresql+asyncpg://", "postgresql://").replace("postgresql+psycopg://", "postgresql://")
+            from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+            from psycopg_pool import AsyncConnectionPool
+
+            # Standard pool with autocommit for checkpoints
+            pool = AsyncConnectionPool(conninfo=clean_url, max_size=10, open=False, kwargs={"autocommit": True})
+            _checkpointer = AsyncPostgresSaver(pool)
+            logger.info("Configured AsyncPostgresSaver checkpointer for LangGraph")
+            return _checkpointer
+        except Exception as e:
+            logger.warning("Failed to initialize AsyncPostgresSaver (falling back to MemorySaver): %s", str(e))
+
+    _checkpointer = MemorySaver()
+    return _checkpointer
+
+
+async def setup_checkpointer():
+    """Call setup on checkpointer if supported (e.g., creating postgres checkpoint tables)."""
+    cp = get_default_checkpointer()
+    if hasattr(cp, "setup"):
+        try:
+            if hasattr(cp, "conn") and hasattr(cp.conn, "open"):
+                await cp.conn.open()
+            await cp.setup()
+            logger.info("LangGraph checkpointer tables initialized successfully")
+        except Exception as e:
+            logger.warning("Checkpointer setup warning: %s", str(e))
 
 
 def get_graph(checkpointer=None):
     global _graph
-    if _graph is None:
-        _graph = build_graph(checkpointer=checkpointer)
+    if _graph is None or checkpointer is not None:
+        compiled = build_graph(checkpointer=checkpointer)
+        if checkpointer is None:
+            _graph = compiled
+        return compiled
     return _graph

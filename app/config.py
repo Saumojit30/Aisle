@@ -30,6 +30,7 @@ class Settings(BaseSettings):
 
     # Database & Security Settings
     database_url: str = "sqlite+aiosqlite:///./aisle.db"
+    cors_origins: str = "*"
     jwt_secret: str = "super-secret-aisle-key-change-in-production-12345"
     jwt_algorithm: str = "HS256"
     jwt_expiration_minutes: int = 1440  # 24 hours
