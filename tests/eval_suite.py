@@ -60,8 +60,8 @@ def run_supervisor_routing_evaluation() -> Dict[str, Any]:
 def run_security_pii_evaluation() -> Dict[str, Any]:
     """Evaluates PII redaction accuracy and latency performance."""
     cf = get_content_filter()
-    # Warm up filter to eliminate cold start overhead
-    cf.sanitize("warmup")
+    # Warm up filter with sample PII to eliminate one-time NLP model loading overhead
+    cf.sanitize("warmup test@example.com 555-0100")
     sample_text = "My email is testuser@example.com and phone is 555-867-5309"
     
     start = time.perf_counter()
