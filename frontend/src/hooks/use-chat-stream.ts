@@ -52,13 +52,13 @@ export function useChatStream() {
       let assistantId = `ai-${Date.now()}`
 
       return new Promise<void>((resolve) => {
-        // Guard against stale connection
+        // Guard against stale connection (allow 60s for potential cold start on first query)
         const timeout = setTimeout(() => {
           es.close()
           esRef.current = null
-          finishWithError("Request timed out. The backend may be unavailable.")
+          finishWithError("Request timed out. The backend is waking up or temporarily unavailable.")
           resolve()
-        }, 30000)
+        }, 60000)
 
         function finishWithError(msg: string) {
           store.setAgentTyping(false)

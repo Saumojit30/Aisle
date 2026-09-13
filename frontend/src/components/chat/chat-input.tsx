@@ -9,9 +9,9 @@ import { cn } from "@/lib/utils"
 const suggestions = [
   "Show me wireless headphones",
   "Track order ORD-001",
-  "What running shoes do you have?",
-  "Cancel my order",
-  "Recommend me a gift",
+  "I want to return my purchase and get a refund",
+  "Connect me with a human manager please",
+  "My email is alice@test.com and phone is 555-123-4567",
 ]
 
 interface ChatInputProps {
