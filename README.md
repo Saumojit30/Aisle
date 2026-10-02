@@ -27,7 +27,7 @@ Aisle automates routine transactions while enforcing strict enterprise complianc
 Unlike basic AI chatbot wrappers that rely on in-memory state and single system prompts, Aisle is architected for production reliability:
 
 1. **Enterprise Ingress & Nginx Gateway:** Unified routing under a single port (port 80) via Nginx. Prevents CORS issues, hides backend services from the public internet, handles EventSource SSE buffering for streaming nodes, and provides clean request logging.
-2. **Dual-Core LLM Provider Factory:** Native integration with **Google Gemini** (`gemini-2.5-pro` and `gemini-2.5-flash`) via `langchain-google-genai`, with seamless fallback/support for **Groq** (`llama-3.3-70b-versatile`, etc.) depending on configuration.
+2. **Dual-Core LLM Provider Factory:** Native integration with **Google Gemini** (`gemini-3.8-flash` and `gemini-3.5-flash-lite`) via `langchain-google-genai`, with seamless fallback/support for **Groq** (`openai/gpt-oss-120b`, `openai/gpt-oss-20b`, etc.) depending on configuration.
 3. **Sub-millisecond Routing (<10ms):** Replaced heavy LLM supervisor routing overhead with fast pattern intent classification for common queries (order tracking, product search, human requests). Falls back to Gemini for nuanced queries.
 4. **Persistent Checkpoints & Async Database:** Replaced in-memory Python dictionaries with SQLModel (Async SQLAlchemy) supporting PostgreSQL (`asyncpg`) and SQLite (`aiosqlite`).
 5. **Human-in-the-Loop (HITL) Approval Queue:** High-risk agent actions (such as order cancellations or refunds) automatically pause execution and queue up in the Admin Dashboard for manager approval.
@@ -109,7 +109,7 @@ When evaluating this platform, it is critical to distinguish between configurati
 *   **In a Production System:** A hard block on a hot lead is counterproductive and leads to **cart abandonment**. An enterprise production setup would replace the hard cutoff with:
     *   **Dynamic, Cart-Value Budgets:** Scale the session budget dynamically (e.g., if a user has a $500 cart, automatically increase their chat budget to $10.00).
     *   **Tiered Rate Limits:** Apply tight restrictions on anonymous guest users while offering high/unlimited access to verified, logged-in loyalty customers.
-    *   **Graceful Model Degradation:** Instead of blocking, swap the active model from `gemini-2.5-pro` to the cheaper `gemini-2.5-flash`, or drop back to static template searches to keep the customer engaged while lowering token costs.
+    *   **Graceful Model Degradation:** Instead of blocking, swap the active model from `gemini-3.8-flash` to the cheaper `gemini-3.5-flash-lite`, or drop back to static template searches to keep the customer engaged while lowering token costs.
 
 ### 💾 In-Memory Checkpoints
 *   **In this Demo:** LangGraph state is persisted using an in-memory `MemorySaver`.
@@ -119,14 +119,14 @@ When evaluating this platform, it is critical to distinguish between configurati
 
 ## 🤖 Gemini & LLM Configuration
 
-The project utilizes a dynamic model factory (`llm_factory.py`) that decides whether to run a Google Gemini model or a Groq Llama/Mixtral model based on the configuration inside your `.env` file.
+The project utilizes a dynamic model factory (`llm_factory.py`) that decides whether to run a Google Gemini model or an active Groq model based on the configuration inside your `.env` file.
 
 ### Default Gemini Model Allocations:
-*   **Supervisor Router:** `gemini-2.5-pro` (handles complex routing logic)
-*   **Recommendation Specialist:** `gemini-2.5-pro` (handles detailed reasoning for matches)
-*   **Order Specialist:** `gemini-2.5-flash` (fast, structured task executor)
-*   **Customer Support Agent:** `gemini-2.5-flash` (empathetic, quick responses)
-*   **Silent Profile Extractor:** `gemini-2.5-flash` (JSON data mining)
+*   **Supervisor Router:** `gemini-3.8-flash` (handles complex routing logic)
+*   **Recommendation Specialist:** `gemini-3.8-flash` (handles detailed reasoning for matches)
+*   **Order Specialist:** `gemini-3.5-flash-lite` (fast, structured task executor)
+*   **Customer Support Agent:** `gemini-3.5-flash-lite` (empathetic, quick responses)
+*   **Silent Profile Extractor:** `gemini-3.5-flash-lite` (JSON data mining)
 
 ---
 

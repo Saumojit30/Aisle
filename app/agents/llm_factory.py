@@ -37,7 +37,7 @@ def get_llm(model_name: str, temperature: float = 0.0) -> BaseChatModel:
 
 
 def get_degraded_llm(temperature: float = 0.0) -> BaseChatModel:
-    """Returns a fast, low-cost model (gemini-2.5-flash-lite or llama-3.1-8b-instant) for degraded execution mode."""
-    degraded_model = "gemini-2.5-flash-lite" if settings.gemini_api_key else "llama-3.1-8b-instant"
+    """Returns a fast, low-cost model (gemini-3.5-flash-lite or openai/gpt-oss-20b) for degraded execution mode."""
+    degraded_model = "gemini-3.5-flash-lite" if settings.gemini_api_key else "openai/gpt-oss-20b"
     logger.warning("Operating in DEGRADED LLM mode with model: %s", degraded_model)
     return get_llm(model_name=degraded_model, temperature=temperature)

@@ -12,11 +12,11 @@ class Settings(BaseSettings):
     jwt_secret_file: Optional[str] = "/run/secrets/jwt_secret"
 
     # Default to Gemini models for the enterprise setup
-    supervisor_model: str = "gemini-2.5-flash"
-    support_model: str = "gemini-2.5-flash-lite"
-    recommendation_model: str = "gemini-2.5-flash"
-    order_model: str = "gemini-2.5-flash-lite"
-    profiling_model: str = "gemini-2.5-flash-lite"
+    supervisor_model: str = "gemini-3.8-flash"
+    support_model: str = "gemini-3.5-flash-lite"
+    recommendation_model: str = "gemini-3.8-flash"
+    order_model: str = "gemini-3.5-flash-lite"
+    profiling_model: str = "gemini-3.5-flash-lite"
 
     max_daily_cost: float = 10.0
     max_session_cost: float = 2.0
