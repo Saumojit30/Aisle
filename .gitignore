@@ -11,6 +11,5 @@ node_modules/
 .next/
 deployment_navigator.md
 AWS_MIGRATION.md
-ROADMAP.md
 *.db
 interviewPrep/

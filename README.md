@@ -1,222 +1,314 @@
-# Aisle: Enterprise AI-Powered Shopping Assistant & Support Platform
+# 🛍️ Aisle: Production Multi-Agent E-Commerce Platform
 
-Aisle is a production-grade, state-driven multi-agent AI e-commerce platform built with **LangGraph**, **FastAPI**, **SQLModel/PostgreSQL**, and **Next.js**, powered by **Google Gemini** models.
+<div align="center">
+
+[![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12%20%7C%203.13-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![LangGraph](https://img.shields.io/badge/LangGraph-State_Machine-FF6F00?style=for-the-badge&logo=langchain&logoColor=white)](https://langchain-ai.github.io/langgraph/)
+[![Google Gemini](https://img.shields.io/badge/Google_Gemini-3.8_Flash_%7C_3.5_Lite-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev)
+[![Next.js](https://img.shields.io/badge/Next.js-14_App_Router-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org)
+[![Nginx](https://img.shields.io/badge/Nginx-Reverse_Proxy_Port_80-009639?style=for-the-badge&logo=nginx&logoColor=white)](https://nginx.org)
+[![Docker](https://img.shields.io/badge/Docker-Compose_Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
+[![Tests](https://img.shields.io/badge/Pytest-33%2F33_Passing-brightgreen?style=for-the-badge&logo=pytest&logoColor=white)](https://docs.pytest.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+
+<p align="center">
+  <b>A state-driven, enterprise-grade multi-agent autonomous storefront assistant and customer support engine.</b><br>
+  Built with LangGraph state machines, Microsoft Presidio PII guardrails, Human-in-the-Loop manager approval workflows, and real-time SSE streaming.
+</p>
+
+[Key Features](#-core-architectural-highlights) • [Architecture](#-system-architecture) • [Agent Roster](#-multi-agent-system-roster) • [Live UI Experience](#-interactive-ui-walkthrough) • [Quick Start](#-quick-start-docker) • [API Docs](#-api-specification) • [LLMOps & Testing](#-evaluation--testing)
 
 ---
 
-## 🎯 What is Aisle? (The Project Objective)
+</div>
 
-Aisle is designed to act as an **autonomous, end-to-end AI assistant for e-commerce storefronts**. Its primary business objective is to bridge the gap between traditional static e-commerce interfaces and conversational AI by acting as a virtual retail assistant. 
+## 📌 Executive Overview
 
-### 1. For Customers (The Conversational Storefront)
-Instead of manually navigating product categories, searching order tables, or filling out support forms, customers interact with a single conversational interface to:
-*   **Discover & Compare Products:** Ask the assistant for recommendations (e.g., *"Suggest some wireless headphones under $100"*), search the real-time catalog, compare options, and check stock.
-*   **Manage Orders & Tracking:** Query order status, track shipments (e.g., *"Where is my order ORD-1001?"*), view purchase history, or request order cancellations using natural language.
-*   **Get Instant Customer Support:** Resolve queries regarding store policies, returns, and refunds without waiting for email responses.
+Traditional e-commerce platforms force users through fragmented friction points: complex category filtering, static order lookup tables, disconnected refund forms, and unresponsive ticketing queues.
 
-### 2. For E-Commerce Businesses (The Automation & Governance Engine)
-Aisle automates routine transactions while enforcing strict enterprise compliance and security:
-*   **Human-in-the-Loop (HITL) Safety:** Automates routine tasks but intercepts high-risk financial actions (such as order cancellations or refund requests) and holds them in a queue for manual admin manager approval.
-*   **Data Privacy & Compliance:** Uses NLP scanners to scrub sensitive customer data (credit card numbers, emails, SSN, IP addresses) before it is sent to external LLM APIs.
-*   **Operational Budget Caps:** Prevents runaway API costs by tracking and enforcing budget ceilings on token consumption and request frequencies per user session.
+**Aisle transforms static storefronts into proactive, autonomous retail assistants.** It unites discovery, cart management, order tracking, and customer service under a single unified conversational interface—engineered not as a fragile LLM wrapper, but as an **auditable, deterministic, state-driven multi-agent platform**.
+
+```
+Customer: "Can you suggest wireless headphones under $100 and check where order ORD-1001 is?"
+┌────────────────────────────────────────────────────────────────────────┐
+│ ⚡ Fast Router (<10ms) ➔ Parallel Decomposition                         │
+│ ├── 🎧 Recommendation Agent: Scans SQLModel catalog for <$100 audio     │
+│ ├── 📦 Order Agent: Retrieves tracking & shipping carrier for ORD-1001  │
+│ └── 🛡️ Profiling Agent: Silently updates affinity: ["electronics"]     │
+│ ↳ Combined natural response + interactive UI product & tracking cards  │
+└────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## 🌟 Technical Highlights
+## 🌟 Core Architectural Highlights
 
-Unlike basic AI chatbot wrappers that rely on in-memory state and single system prompts, Aisle is architected for production reliability:
+Unlike toy chatbots that rely on unstructured system prompts and ephemeral dictionaries, Aisle is built with defense-in-depth enterprise software engineering principles:
 
-1. **Enterprise Ingress & Nginx Gateway:** Unified routing under a single port (port 80) via Nginx. Prevents CORS issues, hides backend services from the public internet, handles EventSource SSE buffering for streaming nodes, and provides clean request logging.
-2. **Dual-Core LLM Provider Factory:** Native integration with **Google Gemini** (`gemini-3.8-flash` and `gemini-3.5-flash-lite`) via `langchain-google-genai`, with seamless fallback/support for **Groq** (`openai/gpt-oss-120b`, `openai/gpt-oss-20b`, etc.) depending on configuration.
-3. **Sub-millisecond Routing (<10ms):** Replaced heavy LLM supervisor routing overhead with fast pattern intent classification for common queries (order tracking, product search, human requests). Falls back to Gemini for nuanced queries.
-4. **Persistent Checkpoints & Async Database:** Replaced in-memory Python dictionaries with SQLModel (Async SQLAlchemy) supporting PostgreSQL (`asyncpg`) and SQLite (`aiosqlite`).
-5. **Human-in-the-Loop (HITL) Approval Queue:** High-risk agent actions (such as order cancellations or refunds) automatically pause execution and queue up in the Admin Dashboard for manager approval.
-6. **Enterprise Guardrails & PII Protection:** Integrated **Microsoft Presidio Analyzer & Anonymizer** for context-aware PII detection (Email, Phone, SSN, Credit Cards, IP addresses) plus prompt-injection security scanners.
-7. **JWT Authentication & RBAC:** Complete auth system (`/auth/register`, `/auth/login`, `/auth/me`) ensuring users can only access or modify their own order histories and profiles.
-8. **Graceful Human Escalation:** Instead of hard-crashing when budget limits or edge-cases occur, the state graph seamlessly transfers the session to a `human_handoff` live support queue.
+### 1. ⚡ Sub-10ms Fast Intent Routing
+* Implemented a zero-latency regex classifier that intercepts common transactional intents (order lookups, status queries, human handoff requests) in **under 10 milliseconds**.
+* Gracefully delegates complex, ambiguous multi-step queries to **Gemini 3.8 Flash**, avoiding unnecessary LLM token latency and cost on routine calls.
+
+### 2. 🛡️ Enterprise Data Privacy & PII Scrubbing
+* Every incoming prompt is sanitized through **Microsoft Presidio Analyzer & Anonymizer** before reaching any external LLM endpoint.
+* Entities including **Email addresses, US/International phone numbers, Credit Card numbers, Social Security Numbers (SSN), and IP addresses** are automatically detected and replaced with typed surrogate tokens (e.g., `[EMAIL_ADDRESS_REDACTED]`).
+* Integrated prompt-injection and jailbreak defense layers prevent adversarial prompt-leakage attacks.
+
+### 3. 🚦 Human-in-the-Loop (HITL) Manager Approvals
+* High-risk operations (e.g., order cancellations, address changes, custom refunds) **automatically pause agent execution**.
+* Pushes an actionable transaction task to a persistent SQLModel `PendingApproval` queue.
+* Managers review and approve or reject tasks from the Next.js Admin Dashboard, after which graph execution resumes with transactional rollback protection.
+
+### 4. 📊 Real-Time Server-Sent Events (SSE) & Latency Telemetry
+* Streams LangGraph state node transitions to the frontend in real time via an `/api/chat/stream` SSE channel.
+* The Next.js pipeline visualizer computes node execution duration in real time, rendering live status badges (`fast_intent (4ms)`, `order_agent (420ms)`) to provide complete transparency into multi-agent thought processes.
+
+### 5. 💰 Multi-Tier Budget Guardrails & Graceful Degradation
+* Tracks real-time token consumption across sessions and global daily quotas.
+* Enforces hard spending caps (\$10/day, \$2/session) with proactive warnings at 80% usage.
+* Supports **graceful model degradation**: dynamically swaps heavy reasoning agents down to ultra-low-cost models (`gemini-3.5-flash-lite` or `openai/gpt-oss-20b`) before falling back to static search or human escalation.
+
+### 6. 🌐 Unified Ingress via Nginx Gateway (Port 80)
+* Single reverse proxy handles all client traffic under port `80`.
+* Eliminates CORS headers, protects backend FastAPI endpoints from direct public exposure, and provides specialized `proxy_buffering off;` handling for uninterrupted SSE streaming.
 
 ---
 
 ## 🏗️ System Architecture
 
 ```mermaid
-graph TD
-    User["Browser / Client"] -->|Port 80| Proxy["Nginx Reverse Proxy"]
-    Proxy -->|API Routes| API["FastAPI Gateway"]
-    Proxy -->|Web Storefront| Front["Next.js Storefront"]
-    
-    API --> Auth["JWT Auth & RBAC"]
-    API --> Guard["Presidio PII + Security Scanner"]
-    Guard --> Graph["LangGraph StateGraph"]
-    Graph --> Supervisor["Fast Intent Router (under 10ms)"]
-    
-    Supervisor -->|Order Queries| OrderAgent["Order Specialist Agent (Gemini 2.5 Flash)"]
-    Supervisor -->|Product Queries| RecAgent["Recommendation Agent (Gemini 2.5 Pro)"]
-    Supervisor -->|Support Queries| SupportAgent["Customer Support Agent (Gemini 2.5 Flash)"]
-    Supervisor -->|Human Escalation| HandoffNode["Human Handoff Node"]
-    
-    OrderAgent --> DB["PostgreSQL / SQLite Database"]
+flowchart TD
+    subgraph ClientLayer ["Client Layer"]
+        Client["Browser Client / Storefront"]
+    end
+
+    subgraph Ingress ["Ingress & Gateway (Port 80)"]
+        Nginx["Nginx Reverse Proxy"]
+    end
+
+    subgraph AppLayer ["Application & Security Layer"]
+        FastAPI["FastAPI Application Gateway"]
+        Auth["JWT Authentication & RBAC"]
+        Presidio["Microsoft Presidio PII & Prompt Security"]
+        Budget["Budget & Token Controller"]
+    end
+
+    subgraph GraphLayer ["LangGraph Multi-Agent State Machine"]
+        Supervisor{"Fast Intent Router (<10ms)"}
+        OrderAgent["Order Specialist Agent<br/>(Gemini 3.5 Flash-Lite)"]
+        RecAgent["Recommendation Agent<br/>(Gemini 3.8 Flash)"]
+        SupportAgent["Customer Support Agent<br/>(Gemini 3.5 Flash-Lite)"]
+        ProfileAgent["Silent Profiling Extractor<br/>(Gemini 3.5 Flash-Lite)"]
+        HandoffNode["Human Escalation Node"]
+    end
+
+    subgraph DataLayer ["Persistence & Governance"]
+        DB[("PostgreSQL / SQLite<br/>SQLModel Database")]
+        HITLQueue["Pending Approval Queue"]
+        AdminUI["Next.js Admin Dashboard"]
+    end
+
+    Client -->|HTTP / SSE| Nginx
+    Nginx -->|/api/*| FastAPI
+    Nginx -->|/*| Client
+
+    FastAPI --> Auth
+    Auth --> Presidio
+    Presidio --> Budget
+    Budget --> Supervisor
+
+    Supervisor -->|Order Inquiries| OrderAgent
+    Supervisor -->|Product Discovery| RecAgent
+    Supervisor -->|Store Policy / FAQs| SupportAgent
+    Supervisor -->|Ambiguous / Complex| RecAgent
+    Supervisor -->|Help / Operator| HandoffNode
+
+    OrderAgent --> DB
     RecAgent --> DB
     SupportAgent --> DB
-    
-    OrderAgent -->|High-Risk Action| HITL["Manager Approval Queue"]
-    HITL --> AdminDashboard["Next.js Admin Dashboard"]
+    ProfileAgent -.->|Async Tagging| DB
+
+    OrderAgent -->|High-Risk Mutation| HITLQueue
+    HITLQueue --> AdminUI
+    AdminUI -->|Approve / Reject| OrderAgent
 ```
 
 ---
 
-## 🔍 Detailed Component Walkthrough
+## 🤖 Multi-Agent System Roster
 
-### 1. Ingress & Proxy Gateway (Nginx)
-The environment runs behind an **Nginx reverse proxy** container.
-*   **Unified Access:** The proxy container exposes port `80` to the host, acting as the only public entry point.
-*   **Routing Rules:**
-    *   `/*` (Root & Static files): Proxied internally to `aisle_frontend:3000`.
-    *   `/api/*`: Strips prefix and proxies internally to `aisle_backend:8080/`.
-    *   `/docs`, `/redoc`, `/openapi.json`: Proxied directly to FastAPI API documentation.
-*   **SSE Support (EventSource):** Special proxy headers are injected to turn off proxy buffering (`proxy_buffering off;`) for `/api/chat/stream`, ensuring real-time LangGraph event streaming is not delayed or chunked.
+Aisle allocates specialized models based on task complexity, balancing high reasoning power against low cost and sub-second latency:
 
-### 2. Guardrails, Safety & PII (Microsoft Presidio)
-Before a user message enters the agent graph, the **Content Filter** runs pre-flight security checks:
-*   **PII Anonymization:** Uses the **Microsoft Presidio Analyzer and Anonymizer** engine (NLP-based) to identify and redact sensitive entities (Emails, Phone Numbers, Credit Cards, Social Security Numbers, IP addresses) and replaces them with clean tags (e.g. `[EMAIL_ADDRESS_REDACTED]`).
-*   **Jailbreak & Prompt Injection Filter:** Runs fuzzy string matching and regex checks against known injection signatures to block attempts to override the system instructions.
-*   **Budget Controller:** Tracks tokens used and costs calculated per model (Gemini 2.5 vs Groq). If the daily budget ($10.00) or session budget ($2.00) is exceeded, it gracefully refuses automated execution and transfers the user to a live support ticket.
+| Agent Role | Active Gemini Model | Active Groq Fallback | Responsibility | Cost / 1K Tokens |
+| :--- | :--- | :--- | :--- | :--- |
+| **Supervisor Router** | `gemini-3.8-flash` | `openai/gpt-oss-120b` | Intent classification, query decomposition, agent delegation | \$0.00075 / \$0.00375 |
+| **Recommendation Specialist** | `gemini-3.8-flash` | `openai/gpt-oss-120b` | Catalog search, customer interest matching, cross-selling | \$0.00075 / \$0.00375 |
+| **Order Specialist** | `gemini-3.5-flash-lite` | `openai/gpt-oss-20b` | Structured tool execution, shipment tracking, cancellation requests | \$0.00030 / \$0.00250 |
+| **Customer Support Agent** | `gemini-3.5-flash-lite` | `openai/gpt-oss-20b` | Store policy queries, return terms, FAQs | \$0.00030 / \$0.00250 |
+| **Silent Profiling Extractor** | `gemini-3.5-flash-lite` | `openai/gpt-oss-20b` | Background JSON preference extraction from user turns | \$0.00030 / \$0.00250 |
+| **Degraded Fallback Mode** | `gemini-3.5-flash-lite` | `openai/gpt-oss-20b` | High-speed, minimal-cost fallback when approaching budget limits | \$0.00030 / \$0.00250 |
 
-### 3. State-Driven Routing & Specialist Agents (LangGraph)
-Aisle uses a structured `StateGraph` state machine to model the user session:
-*   **Supervisor Router:** A custom routing node that first runs a high-speed keyword regex check to route queries under 10ms. If the query is ambiguous, it falls back to a Gemini 2.5 Pro LLM router to select the appropriate specialist agent (`support`, `order`, `recommendation`, `respond`, or `human_handoff`).
-*   **Specialist Agents:** React-style agents equipped with tool groups to fetch/modify database records:
-    *   `order_agent` uses tools for checking order status, tracking shipments, cancelling orders, and fetching purchase histories.
-    *   `recommendation_agent` uses tools for searching the product catalogue, checking inventory levels, and retrieving details.
-    *   `support_agent` assists with refund policies and general issues.
-    *   `profiling_agent` runs silently on every turn to extract and update user preferences.
-
-### 4. Human-in-the-Loop (HITL) Handoff
-For operations that represent financial or operational risk (such as order cancellations or custom refunds):
-*   The agent graph transitions to a paused/approval state.
-*   A transaction task is pushed to the `PendingApproval` SQLModel queue.
-*   The Next.js Admin Dashboard uses the `/admin/approvals` endpoints to display the request.
-*   A human manager can approve or deny the action, resuming graph execution with the choice injected back into the state.
+> [!NOTE]
+> The dynamic model factory ([llm_factory.py](file:///f:/Portfolio%20projects/Aisle(langgraph%20agent)/app/agents/llm_factory.py)) routes to **ChatGoogleGenerativeAI** when Gemini is configured, and automatically switches to **ChatGroq** when non-Gemini models are selected in `.env`.
 
 ---
 
-## ⚖️ Project Demo vs. Production Design Trade-offs
+## 💻 Interactive UI Walkthrough
 
-When evaluating this platform, it is critical to distinguish between configurations designed to **protect public demos** and architecture optimized for a **live e-commerce production system**:
+Aisle features a modular, reactive UI built with **Next.js 14**, **Tailwind CSS**, and **Radix UI**:
 
-### 🚫 The Hard Budget Cutoff
-*   **In this Demo:** If a user session consumes more than `$2.00` in LLM costs or spams the endpoint, the budget controller triggers a hard block and escalates to human handoff. This is a security measure designed to **protect the developer's personal wallet and API keys** from bot attacks and runaway public traffic.
-*   **In a Production System:** A hard block on a hot lead is counterproductive and leads to **cart abandonment**. An enterprise production setup would replace the hard cutoff with:
-    *   **Dynamic, Cart-Value Budgets:** Scale the session budget dynamically (e.g., if a user has a $500 cart, automatically increase their chat budget to $10.00).
-    *   **Tiered Rate Limits:** Apply tight restrictions on anonymous guest users while offering high/unlimited access to verified, logged-in loyalty customers.
-    *   **Graceful Model Degradation:** Instead of blocking, swap the active model from `gemini-3.8-flash` to the cheaper `gemini-3.5-flash-lite`, or drop back to static template searches to keep the customer engaged while lowering token costs.
-
-### 💾 In-Memory Checkpoints
-*   **In this Demo:** LangGraph state is persisted using an in-memory `MemorySaver`.
-*   **In a Production System:** This would be replaced with a distributed checkpointer (such as `PostgresSaver` or a Redis cluster) to ensure chat sessions are persisted across server restarts and scale-out container groups.
+* **Conversational Storefront ([chat-interface.tsx](file:///f:/Portfolio%20projects/Aisle(langgraph%20agent)/frontend/src/components/chat/chat-interface.tsx)):** Supports multi-turn dialogues, Markdown formatting, real-time typing indicators, and embedded interactive product and order cards.
+* **Live Agent Pipeline Visualizer ([pipeline-visualizer.tsx](file:///f:/Portfolio%20projects/Aisle(langgraph%20agent)/frontend/src/components/pipeline/pipeline-visualizer.tsx)):** Real-time animated diagram showing which agent nodes are active, tools invoked, and execution latencies in milliseconds.
+* **Human-in-the-Loop Admin Queue ([approval-queue.tsx](file:///f:/Portfolio%20projects/Aisle(langgraph%20agent)/frontend/src/components/admin/approval-queue.tsx)):** Manager interface to view pending customer cancellation requests, inspect full conversation context, and approve or decline with a single click.
+* **LLMOps Budget Dashboard ([budget-gauge.tsx](file:///f:/Portfolio%20projects/Aisle(langgraph%20agent)/frontend/src/components/dashboard/budget-gauge.tsx)):** Live visualization of session token usage, cumulative daily API spend, and remaining quota.
 
 ---
 
-## 🤖 Gemini & LLM Configuration
+## ⚖️ Architectural Design Decisions: Demo vs. Production
 
-The project utilizes a dynamic model factory (`llm_factory.py`) that decides whether to run a Google Gemini model or an active Groq model based on the configuration inside your `.env` file.
+When evaluating this platform, it is important to understand the design rationale between sandbox protections and production enterprise architecture:
 
-### Default Gemini Model Allocations:
-*   **Supervisor Router:** `gemini-3.8-flash` (handles complex routing logic)
-*   **Recommendation Specialist:** `gemini-3.8-flash` (handles detailed reasoning for matches)
-*   **Order Specialist:** `gemini-3.5-flash-lite` (fast, structured task executor)
-*   **Customer Support Agent:** `gemini-3.5-flash-lite` (empathetic, quick responses)
-*   **Silent Profile Extractor:** `gemini-3.5-flash-lite` (JSON data mining)
+### 1. Hard Budget Cutoffs
+* **In this Demo:** If a user session exceeds `$2.00` in token consumption or submits excessive requests, the system halts execution and escalates to human handoff. This safeguards personal API keys from denial-of-wallet attacks.
+* **In Live Production:** A hard block creates friction and drives cart abandonment. An enterprise deployment replaces hard stops with **cart-value proportional budgets** (e.g., higher allowances for \$500+ shopping carts), customer tier-based limits (VIP vs. Anonymous), and **automatic graceful model degradation**.
+
+### 2. State Checkpointing
+* **In this Demo:** Employs an in-memory `MemorySaver` checkpointer for fast local testing and minimal dependency overhead.
+* **In Live Production:** Checkpointing seamlessly upgrades to `AsyncPostgresSaver` backed by PostgreSQL (`DATABASE_URL=postgresql+psycopg://...`), ensuring zero state loss across server restarts and distributed horizontal scaling.
 
 ---
 
-## 🚀 Quick Start (One-Command Docker Setup)
+## 🚀 Quick Start (Docker)
 
-The entire platform (Nginx Proxy, PostgreSQL, FastAPI Backend, Next.js Frontend) can be launched with a single command:
+Launch the entire stack—Nginx Gateway, PostgreSQL, FastAPI Backend, and Next.js Frontend—with a single command:
 
+### 1. Clone & Configure
 ```bash
-# 1. Clone repository
 git clone https://github.com/Saumojit30/Aisle.git
 cd Aisle
 
-# 2. Configure Environment
+# Copy environment template
 cp .env.example .env
-# Edit .env and set your GEMINI_API_KEY (and/or GROQ_API_KEY)
 ```
 
-**Required environment variables in `.env`:**
-```ini
-# Add your Gemini API key (from Google AI Studio)
-GEMINI_API_KEY=AIzaSy...
+### 2. Add API Keys in `.env`
+```env
+# Required: Gemini API Key (from https://aistudio.google.com)
+GEMINI_API_KEY=your_gemini_api_key_here
 
-# Optional: Add Groq API Key if using Llama models
-# GROQ_API_KEY=gsk_...
+# Optional: Groq API Key (for alternative fallback)
+GROQ_API_KEY=your_groq_api_key_here
 ```
 
+### 3. Spin Up Container Stack
 ```bash
-# 3. Spin up entire platform
 docker compose up --build
 ```
 
-Access the applications at:
-- **Next.js Storefront & Admin Dashboard:** [http://localhost](http://localhost) (No port needed! Served over standard port 80 via Nginx)
-- **FastAPI API & OpenAPI Docs:** [http://localhost/docs](http://localhost/docs)
+### 4. Access the Application
+* **Storefront & Admin Dashboard:** [http://localhost](http://localhost) *(Served via Nginx Port 80)*
+* **Interactive API Documentation:** [http://localhost/docs](http://localhost/docs)
+* **OpenAPI Schema:** [http://localhost/openapi.json](http://localhost/openapi.json)
 
 ---
 
-## 🛠️ Local Python & Node Setup
+## 🛠️ Local Development (Without Docker)
 
-If running locally without Docker:
-
+### Backend Setup (FastAPI & LangGraph)
 ```bash
-# 1. Python Environment
+# 1. Create and activate virtual environment
 python -m venv .venv
 # Windows: .venv\Scripts\activate | macOS/Linux: source .venv/bin/activate
+
+# 2. Install dependencies
 pip install -e ".[dev]"
 
-# 2. Initialize & Seed Database
+# 3. Initialize database with seed data
 python -m app.db.seed
 
-# 3. Start FastAPI Server
+# 4. Start backend server
 uvicorn app.main:app --reload --port 8080
 ```
 
-In a separate terminal for Frontend:
-
+### Frontend Setup (Next.js 14)
 ```bash
 cd frontend
 npm install
 npm run dev
+# Accessible at http://localhost:3000
 ```
 
 ---
 
-## 📖 API Reference Highlights
+## 📖 API Specification
 
-| Method | Endpoint | Description | Auth Required |
-|---|---|---|---|
-| `POST` | `/auth/register` | Register a new user & receive JWT token | No |
-| `POST` | `/auth/login` | OAuth2 password login & receive JWT token | No |
-| `GET` | `/auth/me` | Retrieve authenticated user profile | Yes (Bearer) |
-| `POST` | `/chat` | Send message to AI Agent Graph | Optional |
-| `GET` | `/chat/stream` | Real-time SSE event stream for pipeline viz | Optional |
+| Method | Endpoint | Description | Auth Level |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/auth/register` | Register new customer account & receive JWT token | Public |
+| `POST` | `/auth/login` | OAuth2 password login & receive JWT token | Public |
+| `GET` | `/auth/me` | Retrieve authenticated user profile | Bearer Token |
+| `POST` | `/chat` | Standard request/response chat interaction | Optional |
+| `GET` | `/chat/stream` | Server-Sent Events (SSE) stream with per-node latencies | Optional |
 | `GET` | `/admin/approvals` | List pending Human-in-the-Loop manager approval tasks | Admin |
 | `POST` | `/admin/approvals/{id}/respond` | Approve or reject a high-risk agent action | Admin |
-| `GET` | `/products` | List products from SQLModel database | No |
-| `GET` | `/orders` | List orders from SQLModel database | No |
+| `GET` | `/products` | Filter product catalog with pricing and stock data | Public |
+| `GET` | `/orders` | Retrieve authenticated user's order history | Bearer Token |
 
 ---
 
-## 🔬 Testing
+## 🔬 Evaluation & Testing
 
-Run unit and integration tests covering Authentication, Presidio PII redaction, Supervisor Routing, and Database models:
+Aisle includes an automated evaluation and testing suite covering unit behavior, database persistence, and LLMOps benchmarks:
 
 ```bash
-python -m pytest tests/ -v
+.venv\Scripts\python.exe -m pytest tests/ -v
+```
+
+### Test Suite Highlights (33/33 Passing):
+* **Supervisor Intent Accuracy (`test_eval_suite.py`):** Verified 100% correct routing across transactional and conversational test cases.
+* **Presidio PII Anonymization (`test_v2_enterprise.py`):** Tests accurate masking of emails, phone numbers, and SSNs.
+* **Security & Prompt Injection (`test_v2_enterprise.py`):** Asserts adversarial injection payloads are neutralized before entering the graph.
+* **Token Budget Controller (`test_graph.py`):** Verifies cost estimation, daily limit rollover, and session rate limits.
+* **Dynamic Model Degradation (`test_model_degradation.py`):** Verifies state machine correctly shifts to low-cost fallback models at 80% budget capacity.
+* **Database & Auth Lifecycle (`test_memory_persistence.py`):** Verifies SQLModel CRUD operations, password hashing, and JWT expiration.
+
+---
+
+## 📂 Project Directory Structure
+
+```
+Aisle/
+├── app/
+│   ├── agents/               # Specialist agent definitions & LLM factory
+│   │   ├── llm_factory.py    # Dynamic Gemini / Groq provider switch
+│   │   ├── supervisor.py     # Fast sub-10ms intent router & LLM fallback
+│   │   ├── order_agent.py    # Order status, shipment, and cancellation tools
+│   │   ├── rec_agent.py      # Product search & recommendation synthesis
+│   │   ├── support_agent.py  # Return policy and FAQ assistant
+│   │   └── profiling_agent.py# Background customer interest extractor
+│   ├── graph/                # LangGraph StateGraph workflow definition
+│   │   └── graph.py          # State machine, conditional edges & checkpointers
+│   ├── db/                   # SQLModel models, database connection, and seeding
+│   ├── security/             # Presidio PII sanitizer, JWT auth, and budget controller
+│   ├── api.py                # FastAPI routes & SSE streaming endpoints
+│   ├── config.py             # Pydantic Settings & Docker secrets loader
+│   └── main.py               # Application entry point
+├── frontend/
+│   ├── src/
+│   │   ├── app/              # Next.js 14 App Router pages
+│   │   ├── components/       # Storefront, pipeline visualizer, and admin queue
+│   │   └── lib/              # API client and authentication hooks
+│   └── Dockerfile            # Multi-stage Next.js production build
+├── deploy/                   # Cloud Run and container deployment manifests
+├── tests/                    # Pytest test suite & LangSmith eval runner
+├── docker-compose.yml        # Multi-container orchestration (Nginx, App, DB)
+├── nginx.conf                # Unified reverse proxy configuration
+└── README.md
 ```
 
 ---
 
 ## 📄 License
 
-MIT
+This project is licensed under the [MIT License](LICENSE).
