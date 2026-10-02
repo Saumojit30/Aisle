@@ -71,6 +71,21 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     app.include_router(router)
+
+    @app.get("/", tags=["Health"])
+    async def root():
+        return {
+            "status": "online",
+            "message": "Aisle Multi-Agent E-Commerce API is running",
+            "version": "0.1.0",
+            "docs": "/docs",
+            "health": "/health",
+        }
+
+    @app.get("/health", tags=["Health"])
+    async def health():
+        return {"status": "healthy"}
+
     return app
 
 
