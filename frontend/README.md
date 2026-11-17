@@ -1,4 +1,11 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Aisle Frontend — Next.js Storefront
+
+**Live Production URL:** [https://aisle-theta-nine.vercel.app/](https://aisle-theta-nine.vercel.app/)  
+**Backend API:** [https://aisle-backend-a1hs.onrender.com/docs](https://aisle-backend-a1hs.onrender.com/docs)
+
+---
+
+This is the Next.js frontend storefront for the Aisle Multi-Agent Autonomous E-Commerce Platform.
 
 ## Getting Started
 

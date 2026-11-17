@@ -7,8 +7,9 @@
 [![LangGraph](https://img.shields.io/badge/LangGraph-State_Machine-FF6F00?style=for-the-badge&logo=langchain&logoColor=white)](https://langchain-ai.github.io/langgraph/)
 [![Google Gemini](https://img.shields.io/badge/Google_Gemini-3.8_Flash_%7C_3.5_Lite-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev)
 [![Next.js](https://img.shields.io/badge/Next.js-14_App_Router-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org)
-[![Nginx](https://img.shields.io/badge/Nginx-Reverse_Proxy_Port_80-009639?style=for-the-badge&logo=nginx&logoColor=white)](https://nginx.org)
-[![Docker](https://img.shields.io/badge/Docker-Compose_Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
+[![Vercel](https://img.shields.io/badge/Vercel-Frontend_Live-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://aisle-theta-nine.vercel.app/)
+[![Render](https://img.shields.io/badge/Render-Backend_API-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://aisle-backend-a1hs.onrender.com/docs)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL_Pooler-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
 [![Tests](https://img.shields.io/badge/Pytest-33%2F33_Passing-brightgreen?style=for-the-badge&logo=pytest&logoColor=white)](https://docs.pytest.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
@@ -17,7 +18,14 @@
   Built with LangGraph state machines, Microsoft Presidio PII guardrails, Human-in-the-Loop manager approval workflows, and real-time SSE streaming.
 </p>
 
-[Key Features](#-core-architectural-highlights) • [Architecture](#-system-architecture) • [Agent Roster](#-multi-agent-system-roster) • [Live UI Experience](#-interactive-ui-walkthrough) • [Quick Start](#-quick-start-docker) • [API Docs](#-api-specification) • [LLMOps & Testing](#-evaluation--testing)
+### 🌐 Live Production Deployments
+| Layer | Service | Live URL |
+| :--- | :--- | :--- |
+| **Frontend Storefront** | Next.js 14 on Vercel | [https://aisle-theta-nine.vercel.app/](https://aisle-theta-nine.vercel.app/) |
+| **Backend Multi-Agent API** | FastAPI + LangGraph on Render | [https://aisle-backend-a1hs.onrender.com/docs](https://aisle-backend-a1hs.onrender.com/docs) |
+| **Database & Checkpoints** | Supabase Managed PostgreSQL | Session Pooler (Port 5432) |
+
+[Live Storefront](https://aisle-theta-nine.vercel.app/) • [Swagger Docs](https://aisle-backend-a1hs.onrender.com/docs) • [Key Features](#-core-architectural-highlights) • [Architecture](#-system-architecture) • [Agent Roster](#-multi-agent-system-roster) • [Live UI Experience](#-interactive-ui-walkthrough) • [Quick Start](#-quick-start-docker) • [API Docs](#-api-specification)
 
 ---
 
